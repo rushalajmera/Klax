@@ -74,9 +74,10 @@ public class Klax extends Applet implements Runnable, KeyListener {
 	private static final int TIME_X = APPLET_WIDTH - 100;
 	private static final int TIME_Y = APPLET_HEIGHT - 10;
 
-	private static final int VERTICAL_KLAX_SCORE = 5;
-
-	private static final int HORIZONTAL_KLAX_SCORE = 0;
+	private static final int CAUGHT_BRICK_SCORE = 5;
+	private static final int VERTICAL_KLAX_SCORE = 50;
+	private static final int HORIZONTAL_KLAX_SCORE = 1000;
+	private static final int DIAGONAL_KLAX_SCORE = 5000;
 
 	private final Random rand = new Random();
 	private final int stack[][] = new int[NUM][NUM];
@@ -130,34 +131,10 @@ public class Klax extends Applet implements Runnable, KeyListener {
 	}
 
 	/**
-	 * Checks the stack to find if any Klax series has been formed.
+	 * Checks the stack to find if any Klax series has been formed and removes
+	 * them.
 	 */
 	private void checkForKlax() {
-		// Check for vertical Klax
-		for (int col = 0; col < NUM; col++) {
-			// Iterates over each column.
-
-			for (int row = 0; row < NUM - 2; row++) {
-				// Iterates over each 3-brick set starting from the top.
-
-				if (stack[col][row] == EMPTY) {
-					continue;
-				} else {
-					if ((stack[col][row] == stack[col][row + 1])
-							&& (stack[col][row] == stack[col][row + 2])) {
-
-						// 1. Remove those bricks
-						stack[col][row] = EMPTY;
-						stack[col][row + 1] = EMPTY;
-						stack[col][row + 2] = EMPTY;
-
-						// 2. Update the score.
-						score += VERTICAL_KLAX_SCORE;
-					}
-				}
-			}
-		}
-
 		// Check for horizontal Klax
 		for (int row = NUM - 1; row >= 0; row--) {
 			// Iterates over each row, starting from the bottom.
@@ -167,28 +144,58 @@ public class Klax extends Applet implements Runnable, KeyListener {
 
 				if (stack[col][row] == EMPTY) {
 					continue;
-				} else {
-					if ((stack[col][row] == stack[col + 1][row])
-							&& (stack[col][row] == stack[col + 2][row])) {
+				} else if ((stack[col][row] == stack[col + 1][row])
+						&& (stack[col][row] == stack[col + 2][row])) {
 
-						// 1. Remove those bricks.
-						stack[col][row] = EMPTY;
-						stack[col + 1][row] = EMPTY;
-						stack[col + 2][row] = EMPTY;
+					// 1. Remove those bricks.
+					stack[col][row] = EMPTY;
+					stack[col + 1][row] = EMPTY;
+					stack[col + 2][row] = EMPTY;
 
-						// 2. Update the score.
-						score += HORIZONTAL_KLAX_SCORE;
-						// 3. Shift the upper bricks down.
-
+					// 2. Shift the upper bricks down.
+					for (int i = row - 1; i >= 0; i--) {
+						stack[col][i + 1] = stack[col][i];
+						stack[col + 1][i + 1] = stack[col + 1][i];
+						stack[col + 2][i + 1] = stack[col + 2][i];
 					}
+
+					// 3. Update the score.
+					score += HORIZONTAL_KLAX_SCORE;
 				}
 			}
 		}
 
+		// Check for vertical Klax
+		for (int col = 0; col < NUM; col++) {
+			// Iterates over each column.
+
+			for (int row = 0; row < NUM - 2; row++) {
+				// Iterates over each 3-brick set starting from the top.
+
+				if (stack[col][row] == EMPTY) {
+					continue;
+				} else if ((stack[col][row] == stack[col][row + 1])
+						&& (stack[col][row] == stack[col][row + 2])) {
+
+					// 1. Remove those bricks
+					stack[col][row] = EMPTY;
+					stack[col][row + 1] = EMPTY;
+					stack[col][row + 2] = EMPTY;
+
+					// 2. Update the score.
+					score += VERTICAL_KLAX_SCORE;
+				}
+			}
+		}
+
+		// TODO Check for forward diagonal Klax.
+
+		// TODO Check for backward diagonal Klax.
+
 		// Steps to be followed when removing a Klax:
 		// 1. Remove those bricks.
-		// 2. Update the score.
-		// 3. Shift the upper bricks down.
+		// 2. Shift the upper bricks down.
+		// 3. Update the score.
 	}
 
 	/**
@@ -268,7 +275,9 @@ public class Klax extends Applet implements Runnable, KeyListener {
 				addMiss();
 			} else {
 				if (spaceOnPaddle()) {
+					// Paddle catches the brick.
 					paddleBrick = brick;
+					score += CAUGHT_BRICK_SCORE;
 				} else {
 					addMiss();
 				}
@@ -362,7 +371,7 @@ public class Klax extends Applet implements Runnable, KeyListener {
 	 */
 	private int getRandomColor() {
 		// Gets colors from 1 to 4.
-		return rand.nextInt(3) + 1;
+		return rand.nextInt(4) + 1;
 	}
 
 	/**
@@ -373,6 +382,7 @@ public class Klax extends Applet implements Runnable, KeyListener {
 	 */
 	private void gameOver(String msg) {
 		isGameOver = true;
+		msg += "\n" + "Your Score: " + score + ".";
 		JOptionPane.showMessageDialog(this, msg);
 		System.exit(0);
 	}
@@ -403,16 +413,18 @@ public class Klax extends Applet implements Runnable, KeyListener {
 	 * Unload the top most brick from the paddle.
 	 */
 	private void unloadPaddle() {
-		int i = 4;
-		for (i = 4; i >= 0; i--) {
-			if (stack[paddlePosition][i] == EMPTY) {
-				stack[paddlePosition][i] = paddleBrick.color;
-				paddleBrick = null;
-				break;
+		if (paddleBrick != null) {
+			int i = 4;
+			for (i = 4; i >= 0; i--) {
+				if (stack[paddlePosition][i] == EMPTY) {
+					stack[paddlePosition][i] = paddleBrick.color;
+					paddleBrick = null;
+					break;
+				}
 			}
-		}
-		if (i < 0) {
-			gameOver("Stack Full. Game Over!");
+			if (i < 0) {
+				gameOver("Stack Full. Game Over!");
+			}
 		}
 	}
 
