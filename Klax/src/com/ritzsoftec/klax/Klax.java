@@ -451,6 +451,12 @@ public class Klax extends Applet implements KeyListener {
 			paddlePosition++;
 	}
 
+	/**
+	 * An inner class which extends the TimerTask to make the bricks fall after
+	 * every delay.
+	 * 
+	 * @author Rushal
+	 */
 	class BrickaFallTask extends TimerTask {
 		@Override
 		public void run() {
