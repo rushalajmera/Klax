@@ -35,6 +35,8 @@ import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JOptionPane;
 
@@ -43,7 +45,7 @@ import javax.swing.JOptionPane;
  * 
  * @author Rushal
  */
-public class Klax extends Applet implements Runnable, KeyListener {
+public class Klax extends Applet implements KeyListener {
 
 	private static final int EMPTY = 0;
 
@@ -66,7 +68,7 @@ public class Klax extends Applet implements Runnable, KeyListener {
 	private static final int MAX = 10;
 	private static final int MAX_MISSES = 3;
 	private static final int NUM = 5;
-	private static final int DELAY = 100;
+	private static final int DELAY = 500;
 	private static final int SCORE_X = 10;
 	private static final int SCORE_Y = 20;
 	private static final int MISSES_X = APPLET_WIDTH - 100;
@@ -83,20 +85,17 @@ public class Klax extends Applet implements Runnable, KeyListener {
 	private final int stack[][] = new int[NUM][NUM];
 
 	private Graphics g;
-	private Thread fallThread;
+	private Timer timer;
 	private Brick brick;
 	private Brick paddleBrick;
 
 	private int paddlePosition;
 	private int score = 0;
 	private int misses = 0;
-	private int time = 0;
-	private boolean isGameOver = false;
+	private final int time = 0;
 
 	@Override
 	public void init() {
-		fallThread = new Thread(this);
-		fallThread.start();
 		addKeyListener(this);
 	}
 
@@ -114,6 +113,10 @@ public class Klax extends Applet implements Runnable, KeyListener {
 
 		// The position of the paddle.
 		paddlePosition = 2;
+
+		// Initializes the timer.
+		timer = new Timer(true);
+		timer.schedule(new BrickaFallTask(), 0, DELAY);
 	}
 
 	@Override
@@ -122,9 +125,9 @@ public class Klax extends Applet implements Runnable, KeyListener {
 		g.setColor(Color.BLACK);
 		checkForKlax();
 		drawBackground();
-		drawStackBricks();
-		drawPaddle();
 		drawFallingBrick();
+		drawPaddle();
+		drawStackBricks();
 		drawScore();
 		drawMiss();
 		drawTime();
@@ -381,9 +384,9 @@ public class Klax extends Applet implements Runnable, KeyListener {
 	 *            The message to be displayed.
 	 */
 	private void gameOver(String msg) {
-		isGameOver = true;
 		msg += "\n" + "Your Score: " + score + ".";
 		JOptionPane.showMessageDialog(this, msg);
+		timer.cancel();
 		System.exit(0);
 	}
 
@@ -448,24 +451,12 @@ public class Klax extends Applet implements Runnable, KeyListener {
 			paddlePosition++;
 	}
 
-	@Override
-	public void run() {
-		int i = 0;
-		while (!isGameOver) {
-			i++;
-			try {
-				Thread.sleep(DELAY);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			if (i % 5 == 0) {
-				if (brick != null) {
-					if (brick.row <= MAX)
-						brick.row++;
-				}
-			}
-			if (i % 10 == 0) {
-				time++;
+	class BrickaFallTask extends TimerTask {
+		@Override
+		public void run() {
+			if (brick != null) {
+				if (brick.row <= MAX)
+					brick.row++;
 			}
 			repaint();
 		}
