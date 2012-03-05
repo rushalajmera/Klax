@@ -34,6 +34,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Date;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -73,8 +74,8 @@ public class Klax extends Applet implements KeyListener {
 	private static final int SCORE_Y = 20;
 	private static final int MISSES_X = APPLET_WIDTH - 100;
 	private static final int MISSES_Y = 20;
-	private static final int TIME_X = APPLET_WIDTH - 100;
-	private static final int TIME_Y = APPLET_HEIGHT - 10;
+	private static final int TIME_X = APPLET_WIDTH - 110;
+	private static final int TIME_Y = APPLET_HEIGHT;
 
 	private static final int CAUGHT_BRICK_SCORE = 5;
 	private static final int VERTICAL_KLAX_SCORE = 50;
@@ -90,11 +91,11 @@ public class Klax extends Applet implements KeyListener {
 	private Brick brick;
 	private final Brick[] paddleBrick = new Brick[NUM_PADDLE_BRICKS];
 	private int topPaddleBrick = -1;
+	private Date startTime = null;
 
 	private int paddlePosition;
 	private int score = 0;
 	private int misses = 0;
-	private final int time = 0;
 
 	@Override
 	public void init() {
@@ -115,6 +116,8 @@ public class Klax extends Applet implements KeyListener {
 
 		// The position of the paddle.
 		paddlePosition = 2;
+
+		startTime = new Date();
 
 		// Initializes the timer.
 		timer = new Timer(true);
@@ -318,6 +321,16 @@ public class Klax extends Applet implements KeyListener {
 	 * Draws the time elapsed at the bottom right corner.
 	 */
 	private void drawTime() {
+		Date currentTime = new Date();
+		long total = currentTime.getTime() - startTime.getTime();
+		total /= 1000;
+		int hours = (int) (total / (60 * 60));
+		total = total % (60 * 60);
+		int minutes = (int) (total / 60);
+		total = total % 60;
+		int seconds = (int) total;
+
+		String time = hours + ":" + minutes + ":" + seconds;
 		g.drawString("Time: " + time, TIME_X, TIME_Y);
 	}
 
@@ -327,7 +340,6 @@ public class Klax extends Applet implements KeyListener {
 	 * @return
 	 */
 	private boolean spaceOnPaddle() {
-		// TODO Make changes to allow paddle to hold 3 bricks.
 		if (topPaddleBrick < NUM_PADDLE_BRICKS - 1)
 			return true;
 		else
