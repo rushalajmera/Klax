@@ -60,7 +60,7 @@ public class Klax extends Applet implements KeyListener {
 	private static final int PATH_X = 250;
 	private static final int PATH_Y = 150;
 	private static final int PADDLE_X = 250;
-	private static final int PADDLE_Y = 410;
+	private static final int PADDLE_Y = 450;
 	private static final int PATH_HEIGHT = 200;
 	private static final int PATH_BRICKS = 10;
 	private static final int PADDLE_HEIGHT = 10;
@@ -80,6 +80,7 @@ public class Klax extends Applet implements KeyListener {
 	private static final int VERTICAL_KLAX_SCORE = 50;
 	private static final int HORIZONTAL_KLAX_SCORE = 1000;
 	private static final int DIAGONAL_KLAX_SCORE = 5000;
+	private static final int NUM_PADDLE_BRICKS = 3;
 
 	private final Random rand = new Random();
 	private final int stack[][] = new int[NUM][NUM];
@@ -87,7 +88,8 @@ public class Klax extends Applet implements KeyListener {
 	private Graphics g;
 	private Timer timer;
 	private Brick brick;
-	private Brick paddleBrick;
+	private final Brick[] paddleBrick = new Brick[NUM_PADDLE_BRICKS];
+	private int topPaddleBrick = -1;
 
 	private int paddlePosition;
 	private int score = 0;
@@ -257,12 +259,17 @@ public class Klax extends Applet implements KeyListener {
 	private void drawPaddle() {
 		g.fillRect(PADDLE_X + paddlePosition * BRICK_WIDTH, PADDLE_Y,
 				PADDLE_WIDTH, PADDLE_HEIGHT);
-		if (paddleBrick != null) {
-			g.setColor(findColor(paddleBrick.color));
-			g.fillRect(PADDLE_X + paddlePosition * BRICK_WIDTH, PADDLE_Y - 30,
-					BRICK_WIDTH, BRICK_HEIGHT);
-			g.setColor(Color.BLACK);
+
+		int i = topPaddleBrick;
+		while (i >= 0) {
+			if (paddleBrick[i] != null) {
+				g.setColor(findColor(paddleBrick[i].color));
+				g.fillRect(PADDLE_X + paddlePosition * BRICK_WIDTH, PADDLE_Y
+						- (i + 1) * 25, BRICK_WIDTH, BRICK_HEIGHT);
+			}
+			i--;
 		}
+		g.setColor(Color.BLACK);
 	}
 
 	/**
@@ -279,7 +286,7 @@ public class Klax extends Applet implements KeyListener {
 			} else {
 				if (spaceOnPaddle()) {
 					// Paddle catches the brick.
-					paddleBrick = brick;
+					paddleBrick[++topPaddleBrick] = brick;
 					score += CAUGHT_BRICK_SCORE;
 				} else {
 					addMiss();
@@ -321,7 +328,7 @@ public class Klax extends Applet implements KeyListener {
 	 */
 	private boolean spaceOnPaddle() {
 		// TODO Make changes to allow paddle to hold 3 bricks.
-		if (paddleBrick == null)
+		if (topPaddleBrick < NUM_PADDLE_BRICKS - 1)
 			return true;
 		else
 			return false;
@@ -416,12 +423,13 @@ public class Klax extends Applet implements KeyListener {
 	 * Unload the top most brick from the paddle.
 	 */
 	private void unloadPaddle() {
-		if (paddleBrick != null) {
+		if (topPaddleBrick >= 0 && paddleBrick[topPaddleBrick] != null) {
 			int i = 4;
 			for (i = 4; i >= 0; i--) {
 				if (stack[paddlePosition][i] == EMPTY) {
-					stack[paddlePosition][i] = paddleBrick.color;
-					paddleBrick = null;
+					stack[paddlePosition][i] = paddleBrick[topPaddleBrick].color;
+					paddleBrick[topPaddleBrick] = null;
+					topPaddleBrick--;
 					break;
 				}
 			}
