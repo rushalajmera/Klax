@@ -74,7 +74,7 @@ public class Klax extends Applet implements KeyListener {
 	private static final int SCORE_Y = 20;
 	private static final int MISSES_X = APPLET_WIDTH - 100;
 	private static final int MISSES_Y = 20;
-	private static final int TIME_X = APPLET_WIDTH - 130;
+	private static final int TIME_X = APPLET_WIDTH - 150;
 	private static final int TIME_Y = APPLET_HEIGHT;
 
 	private static final int CAUGHT_BRICK_SCORE = 5;
@@ -82,6 +82,9 @@ public class Klax extends Applet implements KeyListener {
 	private static final int HORIZONTAL_KLAX_SCORE = 1000;
 	private static final int DIAGONAL_KLAX_SCORE = 5000;
 	private static final int NUM_PADDLE_BRICKS = 3;
+
+	private static final int PAUSED = 1;
+	private static final int RUNNING = 2;
 
 	private final Random rand = new Random();
 	private final int stack[][] = new int[NUM][NUM];
@@ -92,10 +95,13 @@ public class Klax extends Applet implements KeyListener {
 	private final Brick[] paddleBrick = new Brick[NUM_PADDLE_BRICKS];
 	private int topPaddleBrick = -1;
 	private Date startTime = null;
+	private long totalTime = 0;
 
 	private int paddlePosition;
 	private int score = 0;
 	private int misses = 0;
+
+	private int status;
 
 	@Override
 	public void init() {
@@ -114,6 +120,11 @@ public class Klax extends Applet implements KeyListener {
 		// The position of the paddle.
 		paddlePosition = 2;
 
+		status = PAUSED;
+	}
+
+	@Override
+	public void start() {
 		startTime = new Date();
 
 		// Initializes the timer.
@@ -122,14 +133,18 @@ public class Klax extends Applet implements KeyListener {
 	}
 
 	@Override
-	public void start() {
+	public void stop() {
+		timer.cancel();
 	}
 
 	@Override
 	public void paint(Graphics g) {
 		this.g = g;
 		g.setColor(Color.BLACK);
-		checkForKlax();
+
+		if (status == RUNNING) {
+			checkForKlax();
+		}
 		drawBackground();
 		drawFallingBrick();
 		drawPaddle();
@@ -137,6 +152,7 @@ public class Klax extends Applet implements KeyListener {
 		drawScore();
 		drawMiss();
 		drawTime();
+		drawMessage();
 	}
 
 	/**
@@ -298,7 +314,7 @@ public class Klax extends Applet implements KeyListener {
 	 */
 	private void drawBackground() {
 		g.setFont(new Font("TimesRoman", Font.PLAIN, 20));
-		g.drawString("KLAX", 300, 50);
+		g.drawString("KLAX", 350, 50);
 
 		// stacks
 		for (int i = 0; i <= NUM; i++) {
@@ -409,7 +425,11 @@ public class Klax extends Applet implements KeyListener {
 	 */
 	private void drawTime() {
 		Date currentTime = new Date();
-		long total = currentTime.getTime() - startTime.getTime();
+		long total = 0;
+		if (status == PAUSED)
+			total = totalTime;
+		else
+			total = totalTime + currentTime.getTime() - startTime.getTime();
 		total /= 1000;
 		int hours = (int) (total / (60 * 60));
 		total = total % (60 * 60);
@@ -419,6 +439,14 @@ public class Klax extends Applet implements KeyListener {
 
 		String time = hours + ":" + minutes + ":" + seconds;
 		g.drawString("Time: " + time, TIME_X, TIME_Y);
+	}
+
+	/**
+	 * Draws a help message to start / pause.
+	 */
+	private void drawMessage() {
+		g.drawString("Press ENTER to start / pause. ESC to exit game.", 140,
+				100);
 	}
 
 	/**
@@ -490,9 +518,10 @@ public class Klax extends Applet implements KeyListener {
 	 *            The message to be displayed.
 	 */
 	private void gameOver(String msg) {
+		timer.cancel();
+		status = PAUSED;
 		msg += "\n" + "Your Score: " + score + ".";
 		JOptionPane.showMessageDialog(this, msg);
-		timer.cancel();
 		System.exit(0);
 	}
 
@@ -507,14 +536,40 @@ public class Klax extends Applet implements KeyListener {
 	@Override
 	public void keyTyped(KeyEvent e) {
 		char key = e.getKeyChar();
-		if (key == 'j' || key == 'J') {
-			moveLeft();
-		} else if (key == 'k' || key == 'K') {
-			moveRight();
-		} else if (key == ' ') {
-			unloadPaddle();
+
+		if (status == PAUSED) {
+			if (key == '\n') {
+				status = RUNNING;
+				startTime = new Date();
+				repaint();
+			} else if (key == '') {
+				gameOver("Game exited.");
+				repaint();
+			}
+		} else if (status == RUNNING) {
+			if (key == 'j' || key == 'J') {
+				moveLeft();
+				repaint();
+			} else if (key == 'k' || key == 'K') {
+				moveRight();
+				repaint();
+			} else if (key == ' ') {
+				unloadPaddle();
+				repaint();
+			} else if (key == '\n') {
+				if (status == PAUSED) {
+					status = RUNNING;
+					startTime = new Date();
+				} else {
+					status = PAUSED;
+					totalTime += new Date().getTime() - startTime.getTime();
+				}
+				repaint();
+			} else if (key == '') {
+				gameOver("Game exited.");
+				repaint();
+			}
 		}
-		repaint();
 		e.consume();
 	}
 
@@ -567,7 +622,7 @@ public class Klax extends Applet implements KeyListener {
 	class BrickaFallTask extends TimerTask {
 		@Override
 		public void run() {
-			if (brick != null) {
+			if (status == RUNNING && brick != null) {
 				if (brick.row <= MAX)
 					brick.row++;
 			}
