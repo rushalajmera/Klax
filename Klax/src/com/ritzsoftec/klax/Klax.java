@@ -74,7 +74,7 @@ public class Klax extends Applet implements KeyListener {
 	private static final int SCORE_Y = 20;
 	private static final int MISSES_X = APPLET_WIDTH - 100;
 	private static final int MISSES_Y = 20;
-	private static final int TIME_X = APPLET_WIDTH - 110;
+	private static final int TIME_X = APPLET_WIDTH - 130;
 	private static final int TIME_Y = APPLET_HEIGHT;
 
 	private static final int CAUGHT_BRICK_SCORE = 5;
