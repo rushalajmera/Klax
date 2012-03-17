@@ -274,7 +274,13 @@ public class Klax extends Applet implements KeyListener {
 					stack[col][row + 1] = EMPTY;
 					stack[col][row + 2] = EMPTY;
 
-					// 2. Update the score.
+					// 2. Shift the upper bricks down.
+					for (int i = row - 1; i >= 0; i--) {
+						stack[col][i + 3] = stack[col][i];
+						stack[col][i] = EMPTY;
+					}
+
+					// 3. Update the score.
 					score += VERTICAL_KLAX_SCORE;
 				}
 			}
