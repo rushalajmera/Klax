@@ -143,6 +143,90 @@ public class Klax extends Applet implements KeyListener {
 	 * them.
 	 */
 	private void checkForKlax() {
+		// Check for upward diagonal Klax.
+		for (int col = 0; col < NUM - 2; col++) {
+			// Iterates over each column starting from the left, except the last
+			// 2 columns
+
+			for (int row = 2; row < NUM; row++) {
+				// Iterates over each 3-brick diagonal set except the first 2
+				// bricks
+
+				if (stack[col][row] == EMPTY) {
+					continue;
+				} else if ((stack[col][row] == stack[col + 1][row - 1])
+						&& (stack[col][row] == stack[col + 2][row - 2])) {
+
+					// 1. Remove those bricks.
+					stack[col][row] = EMPTY;
+					stack[col + 1][row - 1] = EMPTY;
+					stack[col + 2][row - 2] = EMPTY;
+
+					// 2. Shift the upper bricks down.
+
+					// Column 1
+					for (int i = row - 1; i >= 0; i--) {
+						stack[col][i + 1] = stack[col][i];
+					}
+
+					// Column 2
+					for (int i = row - 2; i >= 0; i--) {
+						stack[col + 1][i + 1] = stack[col + 1][i];
+					}
+
+					// Column 3
+					for (int i = row - 3; i >= 0; i--) {
+						stack[col + 2][i + 1] = stack[col + 2][i];
+					}
+
+					// 3. Update the score.
+					score += DIAGONAL_KLAX_SCORE;
+				}
+			}
+		}
+
+		// Check for downward diagonal Klax.
+		for (int col = 0; col < NUM - 2; col++) {
+			// Iterates over each column starting from the left, except the last
+			// 2 columns
+
+			for (int row = 0; row < NUM - 2; row++) {
+				// Iterates over each 3-brick diagonal set except the first 2
+				// bricks
+
+				if (stack[col][row] == EMPTY) {
+					continue;
+				} else if ((stack[col][row] == stack[col + 1][row + 1])
+						&& (stack[col][row] == stack[col + 2][row + 2])) {
+
+					// 1. Remove those bricks.
+					stack[col][row] = EMPTY;
+					stack[col + 1][row + 1] = EMPTY;
+					stack[col + 2][row + 2] = EMPTY;
+
+					// 2. Shift the upper bricks down.
+
+					// Column 1
+					for (int i = row - 1; i >= 0; i--) {
+						stack[col][i + 1] = stack[col][i];
+					}
+
+					// Column 2
+					for (int i = row; i >= 0; i--) {
+						stack[col + 1][i + 1] = stack[col + 1][i];
+					}
+
+					// Column 3
+					for (int i = row + 1; i >= 0; i--) {
+						stack[col + 2][i + 1] = stack[col + 2][i];
+					}
+
+					// 3. Update the score.
+					score += DIAGONAL_KLAX_SCORE;
+				}
+			}
+		}
+
 		// Check for horizontal Klax
 		for (int row = NUM - 1; row >= 0; row--) {
 			// Iterates over each row, starting from the bottom.
@@ -195,10 +279,6 @@ public class Klax extends Applet implements KeyListener {
 				}
 			}
 		}
-
-		// TODO Check for forward diagonal Klax.
-
-		// TODO Check for backward diagonal Klax.
 
 		// Steps to be followed when removing a Klax:
 		// 1. Remove those bricks.
