@@ -100,10 +100,7 @@ public class Klax extends Applet implements KeyListener {
 	@Override
 	public void init() {
 		addKeyListener(this);
-	}
 
-	@Override
-	public void start() {
 		// Sets the dimensions of the Applet.
 		this.setSize(APPLET_WIDTH, APPLET_HEIGHT);
 
@@ -122,6 +119,10 @@ public class Klax extends Applet implements KeyListener {
 		// Initializes the timer.
 		timer = new Timer(true);
 		timer.schedule(new BrickaFallTask(), 0, DELAY);
+	}
+
+	@Override
+	public void start() {
 	}
 
 	@Override
